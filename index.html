@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Astral Requiem — Campaign Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=10">
+</head>
+
+<body>
+
+  <!-- Hidden sprite: the sparkle shapes used by all title sparkles -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <path id="sparkleLarge"
+        d="M41.25,40 L42.5,10 L43.75,40 L45,41.25 L75,42.5 L45,43.75 L43.75,45 L42.5,75 L41.25,45 L40,43.75 L10,42.5 L40,41.25z" />
+      <path id="sparkleSmall"
+        d="M41.25,40 L42.5,25 L43.75,40 L45,41.25 L60,42.5 L45,43.75 L43.75,45 L42.5,60 L41.25,45 L40,43.75 L25,42.5 L40,41.25z" />
+      <radialGradient id="sparkleGoldGrad" cx="35%" cy="30%" r="75%">
+        <stop offset="0%" stop-color="#FFFBEF" />
+        <stop offset="28%" stop-color="#F3E3AE" />
+        <stop offset="55%" stop-color="#CDAF5B" />
+        <stop offset="80%" stop-color="#9C7A32" />
+        <stop offset="100%" stop-color="#6E5220" />
+      </radialGradient>
+    </defs>
+  </svg>
+
+  <!-- Site Header -->
+  <header class="site-header">
+    <div class="site-brand">
+      <a class="site-title" data-nav="dashboard">The Astral Requiem<span class="title-sparkles" aria-hidden="true">
+          <svg class="sparkle sparkle-1" viewBox="0 0 100 100">
+            <g class="s-large">
+              <use href="#sparkleLarge" fill="url(#sparkleGoldGrad)" />
+            </g>
+            <g class="s-large2">
+              <use href="#sparkleLarge" fill="url(#sparkleGoldGrad)" />
+            </g>
+            <g class="s-small">
+              <use href="#sparkleSmall" fill="url(#sparkleGoldGrad)" />
+            </g>
+          </svg>
+          <svg class="sparkle sparkle-2" viewBox="0 0 100 100">
+            <g class="s-large">
+              <use href="#sparkleLarge" fill="url(#sparkleGoldGrad)" />
+            </g>
+            <g class="s-large2">
+              <use href="#sparkleLarge" fill="url(#sparkleGoldGrad)" />
+            </g>
+            <g class="s-small">
+              <use href="#sparkleSmall" fill="url(#sparkleGoldGrad)" />
+            </g>
+          </svg>
+          <svg class="sparkle sparkle-3" viewBox="0 0 100 100">
+            <g class="s-large">
+              <use href="#sparkleLarge" fill="url(#sparkleGoldGrad)" />
+            </g>
+            <g class="s-large2">
+              <use href="#sparkleLarge" fill="url(#sparkleGoldGrad)" />
+            </g>
+            <g class="s-small">
+              <use href="#sparkleSmall" fill="url(#sparkleGoldGrad)" />
+            </g>
+          </svg>
+          <svg class="sparkle sparkle-4" viewBox="0 0 100 100">
+            <g class="s-large">
+              <use href="#sparkleLarge" fill="url(#sparkleGoldGrad)" />
+            </g>
+            <g class="s-large2">
+              <use href="#sparkleLarge" fill="url(#sparkleGoldGrad)" />
+            </g>
+            <g class="s-small">
+              <use href="#sparkleSmall" fill="url(#sparkleGoldGrad)" />
+            </g>
+          </svg>
+          <svg class="sparkle sparkle-5" viewBox="0 0 100 100">
+            <g class="s-large">
+              <use href="#sparkleLarge" fill="url(#sparkleGoldGrad)" />
+            </g>
+            <g class="s-large2">
+              <use href="#sparkleLarge" fill="url(#sparkleGoldGrad)" />
+            </g>
+            <g class="s-small">
+              <use href="#sparkleSmall" fill="url(#sparkleGoldGrad)" />
+            </g>
+          </svg>
+        </span></a>
+      <div class="site-divider-v"></div>
+      <span class="site-tagline">Campaign Log &amp; Party Records</span>
+    </div>
+    <nav class="site-header-nav" id="siteNav">
+      <span class="nav-indicator" id="navIndicator" aria-hidden="true"></span>
+      <a data-nav="dashboard" class="nav-active">Dashboard</a>
+      <a data-nav="characters">Characters</a>
+      <a data-nav="npcs">NPCs</a>
+      <a data-nav="lore">World Lore</a>
+      <a data-nav="quests">Quests</a>
+      <a data-nav="sessions">Sessions</a>
+      <a data-nav="treasury">Treasury</a>
+      <a data-nav="rules">Homebrew</a>
+    </nav>
+
+    <button type="button" class="mobile-nav-toggle" id="mobileNavToggle" aria-label="Toggle navigation menu"
+      aria-expanded="false" aria-controls="siteNav">
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+    </button>
+
+    <div class="mobile-nav-backdrop" id="mobileNavBackdrop"></div>
+
+    <div class="header-walker" id="headerWalker" aria-hidden="true">
+      <div class="header-walker-sprite anim-walk" id="headerWalkerSprite"></div>
+    </div>
+  </header>
+
+  <!-- Main Split -->
+  <div class="split-container">
+
+    <button type="button" class="mobile-back-btn" id="mobileBackBtn" aria-label="Back to list">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 18l-6-6 6-6" />
+      </svg>
+      <span>Back to list</span>
+    </button>
+
+    <div class="left-side" id="leftSide">
+      <!-- Rendered by app.js -->
+    </div>
+
+    <div class="split-divider"></div>
+
+    <div class="canvas-side" id="canvasSide">
+      <!-- Rendered by app.js -->
+    </div>
+
+  </div>
+
+  <!-- Modal root -->
+  <div id="modalRoot"></div>
+
+  <!-- Toast root -->
+  <div id="toastRoot"></div>
+
+  <!-- Site Footer -->
+  <footer class="site-footer">
+    <span id="footerStatus">Data saved locally in this browser</span>
+    <div class="footer-links">
+      <a id="exportBtn" href="#">Export JSON</a>
+      <span class="footer-dot">&middot;</span>
+      <a id="importBtn" href="#">Import JSON</a>
+      <span class="footer-dot">&middot;</span>
+      <a id="resetBtn" href="#">Reset Data</a>
+    </div>
+  </footer>
+
+  <input type="file" id="importFile" accept="application/json" style="display:none">
+
+  <!-- Supabase v2 client, loaded via CDN — no npm/bundler required -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js?v=5"></script>
+  <script src="character.js?v=2"></script>
+
+</body>
+
+</html>

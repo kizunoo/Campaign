@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@3d-dice/dice-box": "^1.1.4",
+    "@supabase/supabase-js": "^2.111.0"
+  }
+}

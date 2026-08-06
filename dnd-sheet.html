@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Character Sheet — Gold Edition</title>
+  <link rel="stylesheet" href="dnd-sheet.css?v=7">
+</head>
+
+<body>
+
+  <!-- ============ CHARACTER LOADING SPLASH ============
+       Covers the page while the character payload is being read (cache
+       or live D&D Beyond fetch) so the sheet never shows its empty,
+       unstyled gold shell. dnd-sheet.js toggles the "is-hidden" class
+       once render() has run and a minimum display time has passed; the
+       typewriter's colors ride the same --accent-gold custom properties
+       applyClassTheme() sets, so it re-tints to match the character's
+       class the instant the data is ready. -->
+  <div class="sheet-loader" id="sheetLoader" aria-hidden="true">
+    <div class="sheet-loader-inner">
+      <div class="typewriter">
+        <div class="slide"><i></i></div>
+        <div class="paper"></div>
+        <div class="keyboard"></div>
+      </div>
+      <p class="sheet-loader-text" id="sheetLoaderText">Typewriting character sheet&hellip;</p>
+    </div>
+  </div>
+
+  <!-- Hidden sprite: the sparkle shapes used by the title sparkles -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <path id="sparkleLarge"
+        d="M41.25,40 L42.5,10 L43.75,40 L45,41.25 L75,42.5 L45,43.75 L43.75,45 L42.5,75 L41.25,45 L40,43.75 L10,42.5 L40,41.25z" />
+      <path id="sparkleSmall"
+        d="M41.25,40 L42.5,25 L43.75,40 L45,41.25 L60,42.5 L45,43.75 L43.75,45 L42.5,60 L41.25,45 L40,43.75 L25,42.5 L40,41.25z" />
+      <radialGradient id="sparkleGoldGrad" cx="35%" cy="30%" r="75%">
+        <stop offset="0%" stop-color="#FFFBEF" />
+        <stop offset="28%" stop-color="#F3E3AE" />
+        <stop offset="55%" stop-color="#CDAF5B" />
+        <stop offset="80%" stop-color="#9C7A32" />
+        <stop offset="100%" stop-color="#6E5220" />
+      </radialGradient>
+    </defs>
+  </svg>
+
+  <!-- Astral Requiem site header — same brand block as index.html, minus
+       the section nav (this sheet is its own destination, reached via
+       the Characters tab, not one of the tabs itself). -->
+  <header class="site-header">
+    <div class="site-brand">
+      <a class="site-title" href="index.html">The Astral Requiem<span class="title-sparkles" aria-hidden="true">
+          <svg class="sparkle sparkle-1" viewBox="0 0 100 100">
+            <g class="s-large">
+              <use href="#sparkleLarge" fill="url(#sparkleGoldGrad)" />
+            </g>
+            <g class="s-large2">
+              <use href="#sparkleLarge" fill="url(#sparkleGoldGrad)" />
+            </g>
+            <g class="s-small">
+              <use href="#sparkleSmall" fill="url(#sparkleGoldGrad)" />
+            </g>
+          </svg>
+          <svg class="sparkle sparkle-2" viewBox="0 0 100 100">
+            <g class="s-large">
+              <use href="#sparkleLarge" fill="url(#sparkleGoldGrad)" />
+            </g>
+            <g class="s-large2">
+              <use href="#sparkleLarge" fill="url(#sparkleGoldGrad)" />
+            </g>
+            <g class="s-small">
+              <use href="#sparkleSmall" fill="url(#sparkleGoldGrad)" />
+            </g>
+          </svg>
+          <svg class="sparkle sparkle-3" viewBox="0 0 100 100">
+            <g class="s-large">
+              <use href="#sparkleLarge" fill="url(#sparkleGoldGrad)" />
+            </g>
+            <g class="s-large2">
+              <use href="#sparkleLarge" fill="url(#sparkleGoldGrad)" />
+            </g>
+            <g class="s-small">
+              <use href="#sparkleSmall" fill="url(#sparkleGoldGrad)" />
+            </g>
+          </svg>
+          <svg class="sparkle sparkle-4" viewBox="0 0 100 100">
+            <g class="s-large">
+              <use href="#sparkleLarge" fill="url(#sparkleGoldGrad)" />
+            </g>
+            <g class="s-large2">
+              <use href="#sparkleLarge" fill="url(#sparkleGoldGrad)" />
+            </g>
+            <g class="s-small">
+              <use href="#sparkleSmall" fill="url(#sparkleGoldGrad)" />
+            </g>
+          </svg>
+          <svg class="sparkle sparkle-5" viewBox="0 0 100 100">
+            <g class="s-large">
+              <use href="#sparkleLarge" fill="url(#sparkleGoldGrad)" />
+            </g>
+            <g class="s-large2">
+              <use href="#sparkleLarge" fill="url(#sparkleGoldGrad)" />
+            </g>
+            <g class="s-small">
+              <use href="#sparkleSmall" fill="url(#sparkleGoldGrad)" />
+            </g>
+          </svg>
+        </span></a>
+      <div class="site-divider-v"></div>
+      <span class="site-tagline">Character Sheet</span>
+    </div>
+
+    <div class="header-walker" id="headerWalker" aria-hidden="true">
+      <div class="header-walker-sprite anim-walk" id="headerWalkerSprite"></div>
+    </div>
+  </header>
+
+  <div class="sheet-shell">
+
+    <!-- Back to Characters -->
+    <a href="index.html" class="back-btn" id="backBtn" aria-label="Back to characters">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 18l-6-6 6-6" />
+      </svg>
+      <span>CHARACTERS</span>
+    </a>
+    <span id="loadStatus" class="load-status"></span>
+
+    <!-- ============ VIEW MODE TOGGLE ============
+         Kept in the DOM (functionally unchanged) so anything already
+         wired to it keeps working, but visually replaced by the single
+         book-icon button next to Resync — see #viewToggleBtn below. -->
+    <div class="view-toggle visually-hidden" id="viewToggle" role="tablist" aria-label="Sheet view mode">
+      <button type="button" class="view-toggle-btn view-toggle-active" data-view="full" tabindex="-1">Full
+        Sheet</button>
+      <button type="button" class="view-toggle-btn" data-view="simplified" tabindex="-1">Simplified View</button>
+    </div>
+
+    <!-- ============ HEADER ============ -->
+    <header class="cs-header">
+      <div class="cs-avatar-wrap">
+        <img id="csAvatar" class="cs-avatar" src="" alt="" hidden>
+        <div id="csAvatarFallback" class="cs-avatar cs-avatar-fallback">?</div>
+      </div>
+
+      <div class="cs-identity">
+        <h1 id="csName" class="cs-name">—</h1>
+        <div class="cs-subline">
+          <span id="csRace">—</span>
+          <span class="dot">&middot;</span>
+          <span id="csClasses">—</span>
+          <span class="dot">&middot;</span>
+          <span>Level <span id="csLevel">—</span></span>
+        </div>
+        <div id="csCampaign" class="cs-campaign">No active campaign</div>
+      </div>
+
+      <div class="cs-rest-actions">
+        <button class="rest-btn" id="shortRestBtn" type="button">
+          <span class="rest-label">Short Rest</span>
+        </button>
+        <button class="rest-btn rest-btn-long" id="longRestBtn" type="button">
+          <span class="rest-label">Long Rest</span>
+        </button>
+        <button class="rest-btn view-toggle-icon-btn" id="viewToggleBtn" type="button" aria-pressed="false"
+          title="Switch to Simplified View">
+          <svg class="view-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path
+              d="M4 5.2c0-.66.54-1.2 1.2-1.2H11a1.6 1.6 0 0 1 1.6 1.6v14.8a1.2 1.2 0 0 0-1.2-1.2H5.2A1.2 1.2 0 0 1 4 18V5.2z" />
+            <path
+              d="M20 5.2c0-.66-.54-1.2-1.2-1.2H13a1.6 1.6 0 0 0-1.6 1.6v14.8a1.2 1.2 0 0 1 1.2-1.2h5.6A1.2 1.2 0 0 0 20 18V5.2z" />
+            <path d="M12 5.2v15.2" />
+          </svg>
+        </button>
+        <button class="rest-btn resync-btn" id="refreshBtn" type="button"
+          title="Re-sync from D&amp;D Beyond">&#x21BA;</button>
+      </div>
+    </header>
+
+    <!-- ============ MOBILE TAB PILL ============
+         Mobile-only. Replaces the old header hamburger dropdown. Tapping
+         this pill opens #simpleTabNav as a bottom sheet (see the mobile
+         media queries in dnd-sheet.css — #simpleTabNav itself is never
+         moved in the DOM, it's just repositioned with `position: fixed`
+         so Full Sheet mode on desktop is completely untouched). The label
+         text is kept in sync with whichever Simplified View tab is active
+         by mobile-sheet-nav.js. -->
+    <button type="button" class="mobile-tab-pill" id="mobileTabPill" aria-haspopup="true" aria-expanded="false"
+      aria-controls="simpleTabNav">
+      <span class="mobile-tab-pill-label" id="mobileTabPillLabel">Abilities</span>
+      <svg class="mobile-tab-pill-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M6 9l6 6 6-6" />
+      </svg>
+    </button>
+    <div class="mobile-tab-sheet-backdrop" id="mobileTabSheetBackdrop"></div>
+
+    <!-- ============ GLOBAL STAT ROW ============ -->
+    <section class="stat-row" id="statRow">
+      <!-- six ability boxes injected by JS -->
+      <div class="ability-boxes" id="abilityBoxes"></div>
+
+      <div class="stat-chip" id="chipProf">
+        <div class="chip-label">Prof Bonus</div>
+        <div class="chip-value" id="valProf">+0</div>
+      </div>
+      <div class="stat-chip" id="chipSpeed">
+        <div class="chip-label">Speed</div>
+        <div class="chip-value" id="valSpeed">30 ft</div>
+      </div>
+      <div class="stat-chip stat-chip-inspiration" id="chipInspiration" role="button" tabindex="0"
+        title="Toggle inspiration">
+        <div class="chip-label">Inspiration</div>
+        <div class="chip-value" id="valInspiration">○</div>
+      </div>
+      <div class="stat-chip" id="chipInit">
+        <div class="chip-label">Initiative</div>
+        <div class="chip-value" id="valInit">+0</div>
+      </div>
+      <div class="stat-chip stat-chip-ac" id="chipAC">
+        <svg class="shield-svg" viewBox="0 0 120 138" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M60 3 L112 19 L112 63 C112 100 90 123 60 135 C30 123 8 100 8 63 L8 19 Z" />
+        </svg>
+        <div class="shield-content">
+          <div class="chip-label">Armor Class</div>
+          <div class="chip-value" id="valAC">10</div>
+        </div>
+      </div>
+      <div class="stat-chip stat-chip-hp" id="chipHP">
+        <div class="chip-label">Hit Points</div>
+        <div class="chip-value hp-value">
+          <div class="hp-track">
+            <div class="hp-fill" id="hpFillBar" style="width:0%;"></div>
+          </div>
+          <div class="hp-main">
+            <input type="number" id="valHPCurrent" class="hp-input" value="0" min="0" step="1" inputmode="numeric"
+              aria-label="Current hit points"> /
+            <input type="number" id="valHPMax" class="hp-input" value="0" min="0" step="1" inputmode="numeric"
+              aria-label="Max hit points">
+          </div>
+          <span class="hp-temp-wrap">(temp <input type="number" id="valHPTemp" class="hp-input hp-input-temp" value="0"
+              min="0" step="1" inputmode="numeric" aria-label="Temporary hit points">)</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ THREE-COLUMN BODY ============ -->
+    <div class="cs-body">
+
+      <!-- LEFT COLUMN -->
+      <aside class="cs-col cs-col-left">
+        <div class="panel" id="panelSavingThrows">
+          <h2 class="panel-title">Saving Throws</h2>
+          <ul class="save-list" id="saveList"></ul>
+        </div>
+
+        <div class="panel" id="panelPassiveSenses">
+          <h2 class="panel-title">Passive Senses</h2>
+          <ul class="passive-list" id="passiveList">
+            <li><span class="passive-name">Perception</span><span class="passive-val" id="passivePerception">10</span>
+            </li>
+            <li><span class="passive-name">Investigation</span><span class="passive-val"
+                id="passiveInvestigation">10</span></li>
+            <li><span class="passive-name">Insight</span><span class="passive-val" id="passiveInsight">10</span></li>
+          </ul>
+        </div>
+
+        <div class="panel panel-grow" id="panelProficiencies">
+          <h2 class="panel-title">Proficiencies &amp; Training</h2>
+          <div class="prof-block">
+            <h3>Armor</h3>
+            <p id="profArmor" class="prof-text">—</p>
+          </div>
+          <div class="prof-block">
+            <h3>Weapons</h3>
+            <p id="profWeapons" class="prof-text">—</p>
+          </div>
+          <div class="prof-block">
+            <h3>Tools</h3>
+            <p id="profTools" class="prof-text">—</p>
+          </div>
+          <div class="prof-block">
+            <h3>Languages</h3>
+            <p id="profLanguages" class="prof-text">—</p>
+          </div>
+        </div>
+      </aside>
+
+      <!-- MIDDLE COLUMN -->
+      <section class="cs-col cs-col-mid">
+        <div class="panel panel-grow" id="panelSkills">
+          <h2 class="panel-title">Skills</h2>
+          <ul class="skill-list" id="skillList"></ul>
+        </div>
+      </section>
+
+      <!-- RIGHT COLUMN -->
+      <section class="cs-col cs-col-right">
+        <div class="panel" id="panelDefenses">
+          <h2 class="panel-title">Defenses &amp; Conditions</h2>
+          <div class="defense-row">
+            <div class="defense-block">
+              <h3>Resistances</h3>
+              <div id="defResist" class="defense-tags">—</div>
+            </div>
+            <div class="defense-block">
+              <h3>Immunities</h3>
+              <div id="defImmune" class="defense-tags">—</div>
+            </div>
+            <div class="defense-block">
+              <h3>Vulnerabilities</h3>
+              <div id="defVuln" class="defense-tags">—</div>
+            </div>
+            <div class="defense-block">
+              <h3>Conditions</h3>
+              <div id="defConditions" class="defense-tags">None</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel panel-grow tab-panel">
+          <nav class="tab-nav" id="tabNav">
+            <span class="nav-indicator" id="tabNavIndicator" aria-hidden="true"></span>
+            <button class="tab-btn tab-active" data-tab="actions">Actions</button>
+            <button class="tab-btn" data-tab="spells">Spells</button>
+            <button class="tab-btn" data-tab="inventory">Inventory</button>
+            <button class="tab-btn" data-tab="features">Features &amp; Traits</button>
+            <button class="tab-btn" data-tab="background">Background</button>
+            <button class="tab-btn" data-tab="notes">Notes</button>
+            <button class="tab-btn" data-tab="extras">Extras</button>
+          </nav>
+
+          <!-- ACTIONS TAB -->
+          <div class="tab-content tab-active" data-tab-content="actions">
+            <!-- Mobile Filter Dropdown -->
+            <select class="mobile-filter-dropdown" id="mobileActionFilter" aria-label="Filter actions">
+              <option value="all">All Actions</option>
+              <option value="attack">Attack</option>
+              <option value="action">Action</option>
+              <option value="bonus">Bonus Action</option>
+              <option value="reaction">Reaction</option>
+              <option value="other">Other</option>
+              <option value="limited">Limited Use</option>
+            </select>
+            <!-- 7-button action economy subtab nav -->
+            <div class="action-subtab-nav" id="actionSubtabNav" role="tablist" aria-label="Action economy filter">
+              <button class="action-subtab-btn action-subtab-active" data-actsubtab="all" role="tab"
+                aria-selected="true">All</button>
+              <button class="action-subtab-btn" data-actsubtab="attack" role="tab">Attack</button>
+              <button class="action-subtab-btn" data-actsubtab="action" role="tab">Action</button>
+              <button class="action-subtab-btn" data-actsubtab="bonus" role="tab">Bonus Action</button>
+              <button class="action-subtab-btn" data-actsubtab="reaction" role="tab">Reaction</button>
+              <button class="action-subtab-btn" data-actsubtab="other" role="tab">Other</button>
+              <button class="action-subtab-btn" data-actsubtab="limited" role="tab">Limited Use</button>
+            </div>
+            <!-- Sectioned actions panel: JS renders ACTIONS / BONUS ACTIONS / REACTIONS / OTHER sections here -->
+            <div id="actionsPanel"></div>
+          </div>
+
+          <!-- SPELLS TAB -->
+          <div class="tab-content" data-tab-content="spells">
+            <!-- Global spellcasting stats -->
+            <div class="spell-stats-strip" id="spellStatsStrip">
+              <div class="spell-stat-chip">
+                <span class="spell-stat-val" id="spellMod">—</span>
+                <span class="spell-stat-lbl">Modifier</span>
+              </div>
+              <div class="spell-stat-divider"></div>
+              <div class="spell-stat-chip">
+                <span class="spell-stat-val" id="spellAtk">—</span>
+                <span class="spell-stat-lbl">Spell Attack</span>
+              </div>
+              <div class="spell-stat-divider"></div>
+              <div class="spell-stat-chip">
+                <span class="spell-stat-val" id="spellSaveDC">—</span>
+                <span class="spell-stat-lbl">Save DC</span>
+              </div>
+            </div>
+            <!-- Search bar -->
+            <div class="spell-search-wrap">
+              <svg class="spell-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <input id="spellSearchInput" class="spell-search-bar" type="search"
+                placeholder="Search spell names, casting times, damage types, conditions or tags…" autocomplete="off">
+            </div>
+            <!-- Mobile Filter Dropdown -->
+            <select class="mobile-filter-dropdown" id="mobileSpellFilter" aria-label="Filter spells">
+              <option value="all">All Levels</option>
+              <option value="0">Cantrips</option>
+              <option value="1">1st Level</option>
+              <option value="2">2nd Level</option>
+              <option value="3">3rd Level</option>
+              <option value="4">4th Level</option>
+              <option value="5">5th Level</option>
+              <option value="6">6th Level</option>
+              <option value="7">7th Level</option>
+              <option value="8">8th Level</option>
+              <option value="9">9th Level</option>
+              <option value="conc">◇ Concentration</option>
+              <option value="ritual">[R] Ritual</option>
+            </select>
+            <!-- Level filter pills -->
+            <div class="spell-level-pills" id="spellLevelPills">
+              <button class="spell-pill spell-pill-active" data-spellpill="all">All</button>
+              <button class="spell-pill" data-spellpill="0">Cantrip</button>
+              <button class="spell-pill" data-spellpill="1">1st</button>
+              <button class="spell-pill" data-spellpill="2">2nd</button>
+              <button class="spell-pill" data-spellpill="3">3rd</button>
+              <button class="spell-pill" data-spellpill="4">4th</button>
+              <button class="spell-pill" data-spellpill="5">5th</button>
+              <button class="spell-pill" data-spellpill="6">6th</button>
+              <button class="spell-pill" data-spellpill="7">7th</button>
+              <button class="spell-pill" data-spellpill="8">8th</button>
+              <button class="spell-pill" data-spellpill="9">9th</button>
+              <button class="spell-pill" data-spellpill="conc">◇ Conc</button>
+              <button class="spell-pill" data-spellpill="ritual">[R] Ritual</button>
+            </div>
+            <!-- Spell table header -->
+            <div class="spell-table-head">
+              <span></span><!-- cast/at-will badge -->
+              <span>Name</span>
+              <span>Time</span>
+              <span>Range</span>
+              <span>Hit / DC</span>
+              <span>Effect</span>
+              <span>Notes</span>
+            </div>
+            <!-- Spell list — populated by renderSpells() -->
+            <ul class="spell-list" id="spellList"></ul>
+          </div>
+
+          <!-- INVENTORY TAB -->
+          <div class="tab-content" data-tab-content="inventory">
+            <div class="inventory-summary">
+              <div class="inv-stat"><span class="inv-label">Weight Carried</span><span class="inv-val" id="invWeight">0
+                  lb</span></div>
+              <div class="inv-currency" id="invCurrency">
+                <span class="coin coin-pp">0 pp</span>
+                <span class="coin coin-gp">0 gp</span>
+                <span class="coin coin-ep">0 ep</span>
+                <span class="coin coin-sp">0 sp</span>
+                <span class="coin coin-cp">0 cp</span>
+              </div>
+            </div>
+            <div class="filter-row" id="invFilterRow">
+              <button class="filter-chip filter-active" data-invfilter="all">All</button>
+              <button class="filter-chip" data-invfilter="equipped">Equipped</button>
+              <button class="filter-chip" data-invfilter="attuned">Attuned</button>
+            </div>
+            <div class="inv-table-head">
+              <span>Name</span><span>Qty</span><span>Weight</span><span>Notes</span>
+            </div>
+            <ul class="inventory-list" id="inventoryList"></ul>
+          </div>
+
+          <!-- FEATURES TAB -->
+          <div class="tab-content" data-tab-content="features">
+            <div class="feature-group">
+              <h3>Class Features</h3>
+              <ul class="feature-list" id="featuresClass"></ul>
+            </div>
+            <div class="feature-group">
+              <h3>Species Traits</h3>
+              <ul class="feature-list" id="featuresRace"></ul>
+            </div>
+            <div class="feature-group">
+              <h3>Feats</h3>
+              <ul class="feature-list" id="featuresFeat"></ul>
+            </div>
+          </div>
+
+          <!-- BACKGROUND TAB -->
+          <div class="tab-content" data-tab-content="background">
+            <div class="bg-grid">
+              <div class="bg-field"><span class="bg-label">Background</span><span id="bgName" class="bg-val">—</span>
+              </div>
+              <div class="bg-field"><span class="bg-label">Alignment</span><span id="bgAlignment"
+                  class="bg-val">—</span></div>
+              <div class="bg-field"><span class="bg-label">Gender</span><span id="bgGender" class="bg-val">—</span>
+              </div>
+              <div class="bg-field"><span class="bg-label">Age</span><span id="bgAge" class="bg-val">—</span></div>
+              <div class="bg-field"><span class="bg-label">Height</span><span id="bgHeight" class="bg-val">—</span>
+              </div>
+              <div class="bg-field"><span class="bg-label">Weight</span><span id="bgWeight" class="bg-val">—</span>
+              </div>
+              <div class="bg-field"><span class="bg-label">Eyes</span><span id="bgEyes" class="bg-val">—</span></div>
+              <div class="bg-field"><span class="bg-label">Skin</span><span id="bgSkin" class="bg-val">—</span></div>
+              <div class="bg-field"><span class="bg-label">Hair</span><span id="bgHair" class="bg-val">—</span></div>
+            </div>
+            <div class="bg-textblock">
+              <h3>Personality Traits</h3>
+              <p id="bgPersonality">—</p>
+            </div>
+            <div class="bg-textblock">
+              <h3>Ideals</h3>
+              <p id="bgIdeals">—</p>
+            </div>
+            <div class="bg-textblock">
+              <h3>Bonds</h3>
+              <p id="bgBonds">—</p>
+            </div>
+            <div class="bg-textblock">
+              <h3>Flaws</h3>
+              <p id="bgFlaws">—</p>
+            </div>
+          </div>
+
+          <!-- NOTES TAB -->
+          <div class="tab-content" data-tab-content="notes">
+            <div class="bg-textblock">
+              <h3>Organizations</h3>
+              <p id="noteOrgs">—</p>
+            </div>
+            <div class="bg-textblock">
+              <h3>Allies</h3>
+              <p id="noteAllies">—</p>
+            </div>
+            <div class="bg-textblock">
+              <h3>Enemies</h3>
+              <p id="noteEnemies">—</p>
+            </div>
+            <div class="bg-textblock">
+              <h3>Backstory</h3>
+              <p id="noteBackstory">—</p>
+            </div>
+            <div class="bg-textblock">
+              <h3>Other Notes</h3>
+              <p id="noteOther">—</p>
+            </div>
+          </div>
+
+          <!-- EXTRAS TAB -->
+          <div class="tab-content" data-tab-content="extras">
+            <ul class="feature-list" id="extrasList">
+              <li class="empty-row">No companions, summons, or wild shapes.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+    </div>
+
+
+    <!-- ============ SIMPLIFIED VIEW ============
+         Empty on page load — populated by moving the real panels above
+         into these tabs when Simplified View is switched on (see
+         simplified-mode.js). Nothing here duplicates data or IDs, so
+         dnd-sheet.js keeps working exactly the same either way. -->
+    <div class="simple-shell" id="simpleShell">
+      <nav class="tab-nav simple-tab-nav" id="simpleTabNav">
+        <span class="nav-indicator" id="simpleNavIndicator" aria-hidden="true"></span>
+        <button class="tab-btn tab-active" data-simple-target="simpleTabAbilities">Abilities</button>
+        <button class="tab-btn" data-simple-target="simpleTabSkills">Skills</button>
+        <button class="tab-btn" data-simple-target="simpleTabActions">Actions</button>
+        <button class="tab-btn" data-simple-target="simpleTabInventory">Inventory</button>
+        <button class="tab-btn" data-simple-target="simpleTabSpells">Spells</button>
+        <button class="tab-btn" data-simple-target="simpleTabDefenses">Speed &amp; Defenses</button>
+        <button class="tab-btn" data-simple-target="simpleTabFeatures">Features &amp; Traits</button>
+        <button class="tab-btn" data-simple-target="simpleTabProficiencies">Proficiencies</button>
+        <button class="tab-btn" data-simple-target="simpleTabBackground">Background</button>
+        <button class="tab-btn" data-simple-target="simpleTabNotes">Notes</button>
+        <button class="tab-btn" data-simple-target="simpleTabExtras">Extras</button>
+      </nav>
+
+      <div class="simple-pane simple-pane-active" id="simpleTabAbilities"></div>
+      <div class="simple-pane" id="simpleTabSkills"></div>
+      <div class="simple-pane panel panel-grow" id="simpleTabActions"></div>
+      <div class="simple-pane panel panel-grow" id="simpleTabInventory"></div>
+      <div class="simple-pane panel panel-grow" id="simpleTabSpells"></div>
+      <div class="simple-pane" id="simpleTabDefenses"></div>
+      <div class="simple-pane panel panel-grow" id="simpleTabFeatures"></div>
+      <div class="simple-pane" id="simpleTabProficiencies"></div>
+      <div class="simple-pane panel panel-grow" id="simpleTabBackground"></div>
+      <div class="simple-pane panel panel-grow" id="simpleTabNotes"></div>
+      <div class="simple-pane panel panel-grow" id="simpleTabExtras"></div>
+    </div>
+  </div>
+
+  <!-- Supabase v2 client, loaded via CDN — no npm/bundler required.
+       Used to cache the D&D Beyond payload so the sheet loads instantly
+       from the database on every page view/F5, instead of re-hitting
+       D&D Beyond (via the proxy) every single time. -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="dnd-sheet.js?v=6"></script>
+  <script src="simplified-mode.js?v=2"></script>
+  <script src="mobile-sheet-nav.js?v=1"></script>
+  <script src="character.js"></script>
+</body>
+
+</html>
