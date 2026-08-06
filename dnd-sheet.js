@@ -2206,9 +2206,9 @@
         attuned: !!item.isAttuned,
         html: `<li data-equipped="${!!item.equipped}" data-attuned="${!!item.isAttuned}">
           <span class="item-name">${def.name || 'Item'}${flags.length ? '<span class="equipped-flag">' + flags.join(' · ') + '</span>' : ''}</span>
-          <span>${qty}</span>
-          <span>${weight ? weight.toFixed(1) + ' lb' : '—'}</span>
-          <span>${(def.type || def.filterType || '')}</span>
+          <span class="inv-qty-cell">${qty}</span>
+          <span class="inv-weight-cell">${weight ? weight.toFixed(1) + ' lb' : '—'}</span>
+          <span class="inv-notes-cell">${(def.type || def.filterType || '')}</span>
         </li>`
       };
     });

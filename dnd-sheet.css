@@ -3917,6 +3917,106 @@ html.simple-mode-active {
     content: 'Notes';
   }
 
+  /* ---- Inventory: name+flags · qty/weight/notes ----
+     Same two-tier card treatment as Attacks/Spells above, for the same
+     reason: the unconditional ".inv-table-head, .inventory-list li
+     { grid-template-columns: 1fr }" rule earlier in the file collapses
+     every field (including the header labels) into one stacked column.
+     This block matches that rule's specificity and appears later, so
+     it wins on mobile without touching desktop. */
+  .inv-table-head,
+  .simple-shell .inv-table-head {
+    display: none;
+  }
+
+  .inventory-list li,
+  .simple-shell .inventory-list li {
+    display: grid;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    grid-template-columns: min-content min-content minmax(0, 1fr);
+    grid-template-areas:
+      "title title title"
+      "qty   weight notes";
+    row-gap: 0.45rem !important;
+    column-gap: 0.45rem !important;
+    align-items: start !important;
+    padding: 0.75rem 10px !important;
+    margin-bottom: 6px !important;
+  }
+
+  .inventory-list li .item-name {
+    grid-area: title;
+    grid-column: 1 / -1;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding-right: 0.5rem;
+  }
+
+  .inventory-list li .inv-qty-cell {
+    grid-area: qty;
+  }
+
+  .inventory-list li .inv-weight-cell {
+    grid-area: weight;
+    text-overflow: clip;
+    overflow: visible;
+    white-space: nowrap;
+  }
+
+  .inventory-list li .inv-notes-cell {
+    grid-area: notes;
+    text-overflow: clip;
+    overflow: visible;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+  }
+
+  .inventory-list li .inv-qty-cell,
+  .inventory-list li .inv-weight-cell,
+  .inventory-list li .inv-notes-cell {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    align-items: flex-start !important;
+    align-self: start !important;
+  }
+
+  /* Small caption labels above each cell, same as the Attacks/Spells
+     cards, so fields still read clearly with the header row hidden. */
+  .inventory-list li .inv-qty-cell::before,
+  .inventory-list li .inv-weight-cell::before,
+  .inventory-list li .inv-notes-cell::before {
+    display: block !important;
+    font-family: 'Alta', sans-serif !important;
+    font-size: 0.52rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.07em !important;
+    text-transform: uppercase !important;
+    color: var(--ink-faint, var(--ink-muted)) !important;
+    margin-bottom: 0.25rem !important;
+    text-overflow: clip;
+    overflow: visible;
+    height: 0.75rem !important;
+    line-height: 0.75rem !important;
+  }
+
+  .inventory-list li .inv-qty-cell::before {
+    content: 'Qty';
+  }
+
+  .inventory-list li .inv-weight-cell::before {
+    content: 'Weight';
+  }
+
+  .inventory-list li .inv-notes-cell::before {
+    content: 'Notes';
+  }
+
   /* Compact square shape for hit/dc and damage/effect roll boxes */
   .atk-hit-cell,
   .atk-dmg-cell,
